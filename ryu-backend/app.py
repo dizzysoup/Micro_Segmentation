@@ -115,8 +115,8 @@ def submit_labels():
 
     return jsonify({"status": "success", "message": "Labels received and processed."})
 
-# 組合 Intent 和 EPG 資料
-
+# 組合 Intent 和 EPG 資料，變成DSL
+#接著，把DSL傳送到 Controller
 @app.route('/datacenter/intent', methods=['POST'])
 def post_intent():
     data = request.get_json()

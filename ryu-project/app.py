@@ -12,8 +12,9 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from ryu.app.wsgi import ControllerBase, WSGIApplication, route
 from ryu.lib import dpid as dpid_lib
-from acl_rules import parse_acl
+from acl_rules import parse_acl, update_acl_rules
 from ryu.topology.api import get_host  # 引入拓撲 API
+
 
 simple_switch_instance_name = 'simple_switch_api_app'
 
@@ -64,21 +65,32 @@ class SimpleSwitchRest13(app_manager.RyuApp):
             dsl_rules = file.readlines()
 
         for rule in dsl_rules:
-            rule = rule.strip()
-            parsed_rule = parse_acl(rule)
-            self.setup_flow_for_acl(datapath, parsed_rule)
+            rule = rule.strip().split(" ")         
+            self.setup_flow_for_acl(datapath, rule)
 
     def setup_flow_for_acl(self, datapath, parsed_rule):
         parser = datapath.ofproto_parser
         ofproto = datapath.ofproto
-
-        action = parsed_rule[0][0]  # allow
-        src_ip = parsed_rule[0][3]  # Source IP
-        dst_ip = parsed_rule[0][5]  # Destination IP
-
-        match = parser.OFPMatch(eth_type=0x0800, ipv4_src=src_ip, ipv4_dst=dst_ip)
-        actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)] if action == "allow" else []
-
+        
+        action = parsed_rule[0]  # allow or deny 
+        
+        protocol = parsed_rule[1] # TCP , UDP , ICMP
+        src_ip = parsed_rule[3]  # Source IP
+        dst_ip = parsed_rule[5]  # Destination IP
+       
+        match = None 
+        if protocol == 'TCP' :
+            match = parser.OFPMatch(eth_type=0x0800, ipv4_src=src_ip, ipv4_dst=dst_ip, ip_proto=6)  # IP 協議 6 是 TCP
+        elif protocol == 'UDP':
+            match = parser.OFPMatch(eth_type=0x0800, ipv4_src=src_ip, ipv4_dst=dst_ip, ip_proto=17)  # IP 協議 17 是 UDP
+        elif protocol == 'ICMP':
+            match = parser.OFPMatch(eth_type=0x0800, ipv4_src=src_ip, ipv4_dst=dst_ip, ip_proto=1)  # IP 協議 1 是 ICMP
+        # 根據 action（allow 或 deny）設置動作
+        actions = []
+        if action == "allow":
+            actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]  # 允許流量進行
+        elif action == "deny":
+            actions = []  # 沒有動作，相當於丟棄該流量        
         self.add_flow(datapath, 10, match, actions)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -139,8 +151,7 @@ class SimpleSwitchController(ControllerBase):
             return Response(content_type='text/html', body=body)
         except Exception as e:
             return Response(status=500, body="Error loading index.html")
-
-
+    
     # 新增 "/hosts" 路由，回傳拓撲中所有主機的資訊
     @route('topology', '/ryu/hosts', methods=['GET'])
     def list_topology_hosts(self, req, **kwargs):
@@ -151,3 +162,21 @@ class SimpleSwitchController(ControllerBase):
         body = json.dumps([host.to_dict() for host in all_hosts])
         print(body)
         return Response(content_type='application/json; charset=utf-8', body=body)
+    
+     # 這裡是新增的 insert_policy API
+    @route('insert_policy', '/ryu/policy', methods=['POST'])
+    def insert_policy(self, req, **kwargs):
+        # 解析 JSON       
+        policy_data = json.loads(req.body)       
+        print(json.dumps(policy_data, indent=4))
+        datapath = self.simpl_switch_spp.switches.get(1)
+        # 進行策略更新等
+        update_acl_rules(policy_data)
+        # 策略應用
+        self.simpl_switch_spp.setup_acl_rules(datapath)
+        # 返回成功的回應
+        return Response(content_type='application/json; charset=utf-8', body=json.dumps({"status": "success"}))
+
+
+       
+

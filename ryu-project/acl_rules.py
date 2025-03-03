@@ -4,6 +4,7 @@
 
 from pyparsing import Word, Literal, nums, Group, Optional, Combine
 
+
 # 定義 DSL 語法規則
 action = Literal("allow") | Literal("deny")
 protocol = Literal("ping")  # 僅支持 ping 協議（ICMP）
@@ -24,3 +25,23 @@ def parse_acl(dsl):
     print(dsl)
     parsed_data = dsl_rule.parseString(dsl)
     return parsed_data
+
+# 更新acl_rules 的規則
+def update_acl_rules(data):   
+    with open("config/acl_rules.txt", "w") as acl_file:
+        for entry in data:
+            # 獲取 egress_ip, ingress_ip, protocol 和 method
+            egress_ip = entry['egress_ip'].strip(',')
+            ingress_ip = entry['ingress_ip']
+            protocol = entry['protocol']
+            method = entry['method']
+
+            
+            # 根據 method（allow 或 deny）來生成規則
+            rule = f"{method} {protocol} from {egress_ip} to {ingress_ip}\n"
+            print(rule)
+            # 將規則寫入 acl_rules.txt
+            acl_file.write(rule)
+            
+
+    print("ACL rules have been updated successfully.")

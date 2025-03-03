@@ -1,4 +1,5 @@
 import json
+import requests
 
 # 根據條件過濾出符合的 IP
 def get_matching_ips(type,label):
@@ -9,20 +10,55 @@ def get_matching_ips(type,label):
     
     return matching_ips
     
-
-
+def update_policy_to_ryu():
+    result = []
+    with open('dsl.txt', 'r') as dsl_file:
+        dsls = dsl_file.readlines()
+        
+        for dsl in dsls:
+            parts = dsl.split("},")
+            
+            method_and_ips = parts[0].strip().split(" ")            
+            method = method_and_ips[0].split("{")[0]  # allow           
+            protocol = method_and_ips[0].split("{")[1].split(",")[0] # TCP
+            
+            egress_ip = method_and_ips[1]  # 192.168.173.102
+            ingress_ip = method_and_ips[2]  # 192.168.173.101
+            
+            policy = {
+                "egress_ip": egress_ip,
+                "ingress_ip": ingress_ip,
+                "protocol": protocol,
+                "method": method
+            }            
+            result.append(policy)
+    url = "http://sdn.yuntech.poc.com/ryu/policy"
+    print(json.dumps(result,indent=4))
+    try:
+        # 使用 POST 請求將解析後的結果發送為 JSON
+        response = requests.post(url, json=result)
+        
+        # 檢查回應狀態
+        if response.status_code == 200:
+            print("Policy successfully updated.")
+        else:
+            print(f"Failed to update policy. Status code: {response.status_code}")
+            print("Response:", response.text)
+    
+    except requests.exceptions.RequestException as e:
+        # 捕捉任何請求異常
+        print(f"An error occurred: {e}")
+    
+            
 # 將intent 轉換成dsl
 def transform_intent_to_dsl():
     with open('intent.txt','r') as intent_file:
         intents = intent_file.readlines()
-    with open('dsl.txt', 'w') as dsl_file:
-        dsl_file.truncate(0)  # 清空文件內容
-    # 開啟 dsl.txt 準備寫入
-    with open('dsl.txt', 'w') as dsl_file:
-        for intent in intents:
-            # 解析 intent.txt 中的每一行
-            parts = intent.strip().split(",")
-            
+   
+    # 開啟 dsl.txt 準備寫入    
+    with open('dsl.txt', 'w+') as dsl_file:
+        for intent in intents:            
+            parts = intent.strip().split(",")            
             # 構建 DSL 格式
             # 假設格式為 "allow function:Web, TCP:3306, function:Database"
             egresstype = parts[0].split(" ")[1].split(":")[0]
@@ -38,10 +74,13 @@ def transform_intent_to_dsl():
             ingressips = get_matching_ips(ingresstype,ingresslabel)
             
             port = parts[1].split(":")[1].strip()  # 3306  
-                
+            print(ingressips)
             for egress_ip in egressips:
                 for ingress_ip in ingressips:                    
                     # 組合為需要的 DSL 格式
-                    dsl_line = f"{allow} {{ {protocol}, {egress_ip}, {ingress_ip} }},{{ {port}, ({egresstype}:{egresslabel}),({ingresstype}:{ingresslabel}) }}\n"
+                    dsl_line = f"{allow}{{{protocol}, {egress_ip}, {ingress_ip} }},{{ {port}, ({egresstype}:{egresslabel}),({ingresstype}:{ingresslabel}) }}\n"
+                    
                     dsl_file.write(dsl_line)
+                    
+    update_policy_to_ryu() # policy 更新到RyuController
             
