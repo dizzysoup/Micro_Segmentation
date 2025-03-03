@@ -1,0 +1,18 @@
+{IP:192.168.173.102,Function: Web}, TCP 80, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.102,Function: Web}, TCP 443, {IP:192.168.173.101,Function: Database}
+{IP:192.168.173.102,Security: Normal}, TCP 3306, {IP:192.168.173.101,Function: Database}
+{IP:192.168.173.101,Security: Normal}, TCP 3306, {IP:192.168.173.101,Function: Database}
+{IP:192.168.173.103,Security: Normal}, TCP 3306, {IP:192.168.173.101,Function: Database}
+{IP:192.168.173.102,Priority: User}, TCP 443, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.101,Priority: User}, TCP 443, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.103,Priority: User}, TCP 443, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.102,Type: Shipping}, *, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.101,Type: Shipping}, *, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.103,Type: Shipping}, *, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.101,Function: Database}, UDP 53, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.102,Function: Web}, ICMP, {IP:192.168.173.101,Function: Database}
+{IP:192.168.173.102,Function: Web}, ICMP, {IP:192.168.173.103,Function: Service}
+{IP:192.168.173.1,Function: Web}, ICMP, {IP:192.168.173.19,Function: Service}
+{IP:192.168.173.1,Function: Web}, *, {IP:192.168.173.19,Function: Service}
+{IP:192.168.173.19,Function: Web}, *, {IP:192.168.173.1,Function: Service}
+{IP:192.168.173.19,Function: Service}, ICMP, {IP:192.168.173.1,Function: Web}

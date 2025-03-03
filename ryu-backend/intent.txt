@@ -1,0 +1,1 @@
+allow function:Web, TCP:3306, function:Database 

@@ -1,0 +1,23 @@
+[
+    {
+        "IP": "192.168.173.102",
+        "function": "Web",
+        "Priority": "User",
+        "Type": "Shipping",
+        "Security": "Normal"
+    },
+    {
+        "IP": "192.168.173.101",
+        "function": "Database",
+        "Priority": "User",
+        "Type": "Shipping",
+        "Security": "Normal"
+    },
+    {
+        "IP": "192.168.173.103",
+        "function": "Web",
+        "Priority": "User",
+        "Type": "Shipping",
+        "Security": "Normal"
+    }
+]

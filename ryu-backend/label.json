@@ -1,0 +1,7 @@
+{
+    "function": ["Null", "Web", "Service", "Database", "Honeypot"],
+    "priority": ["Null", "User", "Admin"],
+    "type": ["Null", "Order", "Shipping", "Payment", "Management"],
+    "security": ["Null", "Normal", "Compromised"]
+}
+  

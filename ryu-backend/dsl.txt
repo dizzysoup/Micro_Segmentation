@@ -1,0 +1,2 @@
+allow { TCP, 192.168.173.102, 192.168.173.101 },{ 3306, (function:Web),(function:Database) }
+allow { TCP, 192.168.173.103, 192.168.173.101 },{ 3306, (function:Web),(function:Database) }
