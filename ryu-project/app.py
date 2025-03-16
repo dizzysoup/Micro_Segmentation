@@ -169,7 +169,8 @@ class SimpleSwitchController(ControllerBase):
         # 解析 JSON       
         policy_data = json.loads(req.body)       
         print(json.dumps(policy_data, indent=4))
-        datapath = self.simpl_switch_spp.switches.get(1)
+        print(self.simpl_switch_spp.switches)
+        datapath = self.simpl_switch_spp.switches.get(8796758451869)
         # 進行策略更新等
         update_acl_rules(policy_data)
         # 策略應用

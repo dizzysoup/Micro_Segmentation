@@ -1,5 +1,6 @@
 import json
 import requests
+import websockets
 
 # 根據條件過濾出符合的 IP
 def get_matching_ips(type,label):
@@ -9,7 +10,8 @@ def get_matching_ips(type,label):
     matching_ips = [entry['IP'] for entry in data if entry[type] == label]
     
     return matching_ips
-    
+
+# 把策略更新到ryu  
 def update_policy_to_ryu():
     result = []
     with open('dsl.txt', 'r') as dsl_file:
@@ -22,7 +24,7 @@ def update_policy_to_ryu():
             method = method_and_ips[0].split("{")[0]  # allow           
             protocol = method_and_ips[0].split("{")[1].split(",")[0] # TCP
             
-            egress_ip = method_and_ips[1]  # 192.168.173.102
+            egress_ip = method_and_ips[1].split(",")[0]  # 192.168.173.102
             ingress_ip = method_and_ips[2]  # 192.168.173.101
             
             policy = {
@@ -48,10 +50,51 @@ def update_policy_to_ryu():
     except requests.exceptions.RequestException as e:
         # 捕捉任何請求異常
         print(f"An error occurred: {e}")
-    
+
+# 把策略更新到iptables
+async def update_policy_to_iptables():
+    result = []    
+    with open('dsl.txt', 'r') as dsl_file:
+        dsls = dsl_file.readlines()
+        
+        for dsl in dsls:
+            parts = dsl.split("},")
             
+            method_and_ips = parts[0].strip().split(" ")            
+            method = method_and_ips[0].split("{")[0]  # allow           
+            protocol = method_and_ips[0].split("{")[1].split(",")[0] # TCP
+            
+            port = parts[1].strip("{}").split(",")[0] # 3306
+            if(port == " ") : continue
+            
+            egress_ip = method_and_ips[1]  # 192.168.173.102 來源
+            ingress_ip = method_and_ips[2]  # 192.168.173.103 接收端
+            
+            policy = {
+                "egress_ip": egress_ip,                
+                "protocol": protocol,
+                "port" : port,
+                "method": method
+            }            
+            result.append(policy)
+    # 開啟websocket，要把策略更新到host上的iptables
+    
+    uri = f'ws://{ingress_ip}:8766'
+    print(uri)
+    # 資料發送
+    async with websockets.connect(uri) as websocket: 
+        # 將字典編碼為JSON
+        json_data = json.dumps(result)
+
+        # 透過WebSocket發送JSON訊息
+        await websocket.send(json_data)
+        print(f'Sent message: {json_data}')
+
+        response = await websocket.recv()
+        print(f'Received response: {response}')
+    
 # 將intent 轉換成dsl
-def transform_intent_to_dsl():
+async def transform_intent_to_dsl():
     with open('intent.txt','r') as intent_file:
         intents = intent_file.readlines()
    
@@ -60,7 +103,7 @@ def transform_intent_to_dsl():
         for intent in intents:            
             parts = intent.strip().split(",")            
             # 構建 DSL 格式
-            # 假設格式為 "allow function:Web, TCP:3306, function:Database"
+            # 假設格式為 allow{TCP, 192.168.173.102, 192.168.173.103 },{ 80, (function:Web),(function:Database) }
             egresstype = parts[0].split(" ")[1].split(":")[0]
             egresslabel = parts[0].split(" ")[1].split(":")[1]           
             
@@ -81,6 +124,8 @@ def transform_intent_to_dsl():
                     dsl_line = f"{allow}{{{protocol}, {egress_ip}, {ingress_ip} }},{{ {port}, ({egresstype}:{egresslabel}),({ingresstype}:{ingresslabel}) }}\n"
                     
                     dsl_file.write(dsl_line)
-                    
-    update_policy_to_ryu() # policy 更新到RyuController
+    if protocol == 'ICMP' :
+        update_policy_to_ryu() # policy 更新到RyuController
+    if protocol == 'TCP' :
+        await update_policy_to_iptables() # policy 更新到iptables
             

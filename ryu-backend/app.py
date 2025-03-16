@@ -2,6 +2,7 @@ from flask import Flask,jsonify,request
 from dslmanager import transform_intent_to_dsl
 import json
 import re
+import asyncio
 app = Flask(__name__)
 
 
@@ -115,10 +116,18 @@ def submit_labels():
 
     return jsonify({"status": "success", "message": "Labels received and processed."})
 
-# 組合 Intent 和 EPG 資料，變成DSL
-#接著，把DSL傳送到 Controller
+''' 
+  { "method" : "allow",
+    "egress" : "Web",
+    "egresstype" : "function",
+    "port" : 3306,
+    "protocol" : "TCP",
+    "ingress" : "Database",
+    "ingresstype" : "function"
+ }
+'''
 @app.route('/datacenter/intent', methods=['POST'])
-def post_intent():
+async def post_intent():
     data = request.get_json()
     
     method = data.get('method' , '')  # allow or deny
@@ -131,7 +140,7 @@ def post_intent():
     
     with open('intent.txt', 'a') as file :
         file.write(f"{method} {egresstype}:{egress}, {protocol}:{port}, {ingresstype}:{ingress} \n")
-    transform_intent_to_dsl()
+    await transform_intent_to_dsl() #把DSL傳送到 Controller
     return "Intent data written to file.", 200
 
 @app.route('/datacenter/dsl/ryu', methods=['GET'])
