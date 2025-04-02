@@ -21,8 +21,11 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=backend
-      - MYSQL_USER=fido-user
+      - MYSQL_USER=user
       - MYSQL_PASSWORD=password
     volumes:
-      - "fido2_db_data:/var/lib/mysql"
-      - "./ryu-backend/db/01_create_users.sql:/docker-entrypoint-initdb.d/01_create_users.sql"
+      - "ryu-db:/var/lib/mysql"
+      - "./ryu-backend/db/01_label.sql:/docker-entrypoint-initdb.d/01_label.sql"
+
+volumes:
+  ryu-db:

@@ -5,10 +5,8 @@ import websockets
 # 根據條件過濾出符合的 IP
 def get_matching_ips(type,label):
     with open('epg.json', 'r') as file:
-        data = json.load(file)            
-    
+        data = json.load(file)              
     matching_ips = [entry['IP'] for entry in data if entry[type] == label]
-    
     return matching_ips
 
 # 把策略更新到ryu  

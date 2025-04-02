@@ -1,2 +1,3 @@
 deny function:Web, ICMP:, function:Database 
 deny function:Service, TCP:80, function:Web 
+deny function:Web, ICMP:, function:Database 

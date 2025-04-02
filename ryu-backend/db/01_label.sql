@@ -1,4 +1,4 @@
--- 創建標籤類型表，包含 function, priority, type, security 等類型
+-- 創建標籤類型表
 CREATE TABLE label_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
     type_name VARCHAR(50) UNIQUE NOT NULL
@@ -9,15 +9,17 @@ CREATE TABLE labels (
     id INT AUTO_INCREMENT PRIMARY KEY,
     label_value VARCHAR(50) NOT NULL,
     label_type_id INT,
-    FOREIGN KEY (label_type_id) REFERENCES label_types(id)
+    FOREIGN KEY (label_type_id) REFERENCES label_types(id) ON DELETE CASCADE ,
+    UNIQUE (label_value, label_type_id)
 );
 
 
 INSERT INTO label_types (type_name) VALUES
 ('function'),
+('application'),
 ('priority'),
 ('type'),
-('security');
+('environment');
 
 -- 插入標籤內容
 INSERT INTO labels (label_value, label_type_id) VALUES
@@ -34,6 +36,16 @@ INSERT INTO labels (label_value, label_type_id) VALUES
 ('Shipping', (SELECT id FROM label_types WHERE type_name = 'type')),
 ('Payment', (SELECT id FROM label_types WHERE type_name = 'type')),
 ('Management', (SELECT id FROM label_types WHERE type_name = 'type')),
-('Null', (SELECT id FROM label_types WHERE type_name = 'security')),
-('Normal', (SELECT id FROM label_types WHERE type_name = 'security')),
-('Compromised', (SELECT id FROM label_types WHERE type_name = 'security'));
+('Null', (SELECT id FROM label_types WHERE type_name = 'application')),
+('ERP', (SELECT id FROM label_types WHERE type_name = 'application')),
+('MRP', (SELECT id FROM label_types WHERE type_name = 'application')),
+('PLM', (SELECT id FROM label_types WHERE type_name = 'application')),
+('CAD', (SELECT id FROM label_types WHERE type_name = 'application')),
+('Null', (SELECT id FROM label_types WHERE type_name = 'environment')),
+('development', (SELECT id FROM label_types WHERE type_name = 'environment')),
+('testing', (SELECT id FROM label_types WHERE type_name = 'environment')),
+('staging', (SELECT id FROM label_types WHERE type_name = 'environment')),
+('production', (SELECT id FROM label_types WHERE type_name = 'environment'));
+
+
+

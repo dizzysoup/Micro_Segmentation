@@ -1,23 +1,31 @@
 [
     {
-        "IP": "192.168.173.101",
+        "ip": "192.168.173.101",
         "function": "Service",
-        "Priority": "User",
-        "Type": "Shipping",
+        "priority": "User",
+        "type": "Shipping",
         "Security": "Normal"
     },
     {
-        "IP": "192.168.173.102",
+        "ip": "192.168.173.102",
         "function": "Web",
-        "Priority": "User",
-        "Type": "Shipping",
+        "priority": "User",
+        "type": "Shipping",
         "Security": "Normal"
     },
     {
-        "IP": "192.168.173.103",
+        "ip": "192.168.173.103",
         "function": "Database",
-        "Priority": "User",
-        "Type": "Shipping",
+        "priority": "User",
+        "type": "Shipping",
         "Security": "Normal"
+    },
+    {
+        "ip": "192.168.173.28",
+        "function": "Web",
+        "priority": "User",
+        "type": "Payment",
+        "application": "MRP",
+        "environment": "development"
     }
 ]
